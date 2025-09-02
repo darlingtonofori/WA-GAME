@@ -34,14 +34,6 @@ class ColorGame {
         this.maxRounds = 5;
         this.colors = ['RED', 'GREEN', 'BLUE', 'YELLOW', 'PURPLE', 'ORANGE'];
         this.currentColor = this.getRandomColor();
-        this.colorCodes = {
-            'RED': '#FF0000',
-            'GREEN': '#00FF00',
-            'BLUE': '#0000FF',
-            'YELLOW': '#FFFF00',
-            'PURPLE': '#800080',
-            'ORANGE': '#FFA500'
-        };
     }
     
     getRandomColor() {
@@ -55,11 +47,10 @@ class ColorGame {
     }
     
     getColorMessage() {
-        const colorCode = this.colorCodes[this.currentColor];
-        return `🎨 Round ${this.round}/${this.maxRounds}\n\nGuess the color name!\n\n${this.getColorBlock(colorCode)}`;
+        return `🎨 Round ${this.round}/${this.maxRounds}\n\nGuess the color name!\n\n${this.getColorBlock()}`;
     }
     
-    getColorBlock(colorCode) {
+    getColorBlock() {
         return `🟥🟥🟥🟥🟥\n🟥🟥🟥🟥🟥\n🟥🟥🟥🟥🟥\n\n💡 Hint: The color is ${this.currentColor.charAt(0) + '•'.repeat(this.currentColor.length-1)}`;
     }
     
@@ -131,7 +122,7 @@ app.post('/api/request-pairing', async (req, res) => {
     }
 });
 
-// Add health check endpoint for Render keep-alive
+// Add health check endpoint for Render
 app.get('/api/health', (req, res) => {
     res.json({ 
         status: 'OK', 
@@ -150,9 +141,12 @@ io.on('connection', (socket) => {
     });
 });
 
+// Use Render's PORT or default to 3000 for local development
 const WEB_PORT = process.env.PORT || 3000;
+
+// Start server with proper port binding for Render
 server.listen(WEB_PORT, '0.0.0.0', () => {
-    console.log(chalk.blue(`🌐 Pairing server running on port ${WEB_PORT}`));
+    console.log(chalk.blue(`🌐 Server running on port ${WEB_PORT}`));
     console.log(chalk.blue(`📱 Open your Render URL to view pairing page`));
 });
 
@@ -163,7 +157,7 @@ const keepAlive = () => {
     
     setInterval(async () => {
         try {
-            const response = await axios.get(`${RENDER_URL}/api/health`);
+            const response = await fetch(`${RENDER_URL}/api/health`);
             console.log(chalk.green(`✅ Health ping successful: ${response.status}`));
         } catch (error) {
             console.log(chalk.yellow(`⚠️ Health ping failed: ${error.message}`));
@@ -253,7 +247,7 @@ async function startWhatsAppBot() {
                         
                         try {
                             const RENDER_URL = process.env.RENDER_EXTERNAL_URL || `http://localhost:${WEB_PORT}`;
-                            await axios.get(`${RENDER_URL}/api/pairing-code?code=${formattedCode}&number=${cleanNumber}`);
+                            await fetch(`${RENDER_URL}/api/pairing-code?code=${formattedCode}&number=${cleanNumber}`);
                             console.log(chalk.green(`✅ Pairing code sent to web interface for: ${cleanNumber}`));
                             userNumbers.set(number, 'sent');
                         } catch (webError) {
@@ -288,7 +282,6 @@ async function startWhatsAppBot() {
                     '';
         
         const jid = message.key.remoteJid;
-        const user = jid.split('@')[0];
         
         // Handle .play command
         if (text.toLowerCase().startsWith('.play')) {

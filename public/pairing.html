@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WhatsApp Bot Pairing</title>
+    <title>WhatsApp Pairing System</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         * {
             margin: 0;
@@ -40,20 +41,101 @@
         .content {
             padding: 25px;
         }
-        .instructions {
+        .form-group {
             margin-bottom: 20px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #25D366;
+        }
+        .input-with-icon {
+            position: relative;
+        }
+        .input-with-icon i {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #25D366;
+        }
+        .input-with-icon input {
+            width: 100%;
+            padding: 12px 15px 12px 45px;
+            border-radius: 8px;
+            border: 2px solid #3d464e;
+            background: #2a3038;
+            color: #fff;
+            font-size: 16px;
+        }
+        button {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(to right, #25D366, #128C7E);
+            border: none;
+            border-radius: 8px;
+            color: white;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        button:hover {
+            background: linear-gradient(to right, #20bd5c, #0f7a68);
+        }
+        .instructions {
+            margin-top: 25px;
+            padding: 15px;
+            background: rgba(40, 45, 52, 0.5);
+            border-radius: 8px;
+            font-size: 14px;
             line-height: 1.6;
         }
-        .qr-container {
-            text-align: center;
-            margin: 20px 0;
+        .instructions ol {
+            padding-left: 20px;
         }
-        .status {
-            text-align: center;
-            margin: 20px 0;
-            padding: 10px;
+        .instructions li {
+            margin-bottom: 8px;
+        }
+        .status-box {
+            margin-top: 25px;
+            padding: 15px;
             border-radius: 8px;
             background: rgba(40, 45, 52, 0.5);
+            text-align: center;
+        }
+        .code-display {
+            margin-top: 20px;
+            text-align: center;
+        }
+        .pairing-code {
+            font-size: 28px;
+            font-weight: 700;
+            letter-spacing: 3px;
+            color: #25D366;
+            background: rgba(40, 45, 52, 0.7);
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+        }
+        .activity-feed {
+            margin-top: 25px;
+            padding: 15px;
+            background: rgba(40, 45, 52, 0.5);
+            border-radius: 8px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        .activity-item {
+            padding: 10px;
+            border-bottom: 1px solid #3d464e;
+            display: flex;
+            align-items: center;
+            gap: 10px;
         }
         footer {
             text-align: center;
@@ -67,46 +149,180 @@
 <body>
     <div class="container">
         <header>
-            <h1>WhatsApp Bot Pairing</h1>
-            <p>Scan QR code to connect your WhatsApp</p>
+            <h1><i class="fab fa-whatsapp"></i> WhatsApp Pairing System</h1>
+            <p>Connect your WhatsApp account with pairing codes</p>
         </header>
         
         <div class="content">
+            <div class="form-group">
+                <label for="phone">WhatsApp Number</label>
+                <div class="input-with-icon">
+                    <i class="fas fa-phone"></i>
+                    <input type="text" id="phone" placeholder="e.g., 1234567890" inputmode="numeric">
+                </div>
+            </div>
+            
+            <button id="request-btn">
+                <i class="fas fa-key"></i> Request Pairing Code
+            </button>
+            
+            <div class="code-display">
+                <div class="pairing-code" id="pairing-code">----</div>
+                <div class="number-display" id="number-display">No number yet</div>
+            </div>
+            
             <div class="instructions">
-                <p>To connect your WhatsApp account:</p>
+                <h3><i class="fas fa-info-circle"></i> Instructions</h3>
                 <ol>
-                    <li>Open WhatsApp on your phone</li>
-                    <li>Tap Menu → Linked Devices → Link a Device</li>
-                    <li>Scan the QR code shown below</li>
+                    <li>Enter your WhatsApp number</li>
+                    <li>Click "Request Pairing Code"</li>
+                    <li>Wait for the system to generate your code</li>
+                    <li>Open WhatsApp → Settings → Linked Devices → Link a Device</li>
+                    <li>Select "Link with phone number instead"</li>
+                    <li>Enter the pairing code shown above</li>
                 </ol>
             </div>
             
-            <div class="qr-container">
-                <p>QR Code will appear in your console/terminal</p>
-                <p style="margin-top: 10px; color: #25D366;">
-                    Check your server logs for the QR code!
-                </p>
+            <div class="status-box">
+                <h3>System Status</h3>
+                <p id="status-text">Ready to receive requests</p>
             </div>
             
-            <div class="status" id="status">
-                Waiting for QR code generation...
+            <div class="activity-feed">
+                <h3><i class="fas fa-history"></i> Recent Activity</h3>
+                <div id="activity-container">
+                    <div class="activity-item">
+                        <i class="fas fa-info-circle" style="color: #25D366;"></i>
+                        <span>System initialized and ready</span>
+                    </div>
+                </div>
             </div>
         </div>
         
         <footer>
-            <p>WhatsApp Bot &copy; 2023 | Using Baileys Library</p>
+            <p>WhatsApp Pairing System &copy; 2023 | Using Baileys Library</p>
         </footer>
     </div>
 
+    <script src="/socket.io/socket.io.js"></script>
     <script>
-        // Simple status updates
-        const statusEl = document.getElementById('status');
+        const socket = io();
+        const requestBtn = document.getElementById('request-btn');
+        const phoneInput = document.getElementById('phone');
+        const statusText = document.getElementById('status-text');
+        const pairingCode = document.getElementById('pairing-code');
+        const numberDisplay = document.getElementById('number-display');
+        const activityContainer = document.getElementById('activity-container');
         
-        // Simulate connection process
-        setTimeout(() => {
-            statusEl.innerHTML = 'QR code generated - check your terminal/console';
-            statusEl.style.color = '#25D366';
-        }, 2000);
+        // Handle pairing code requests
+        requestBtn.addEventListener('click', function() {
+            const phoneNumber = phoneInput.value.trim();
+            
+            if (!phoneNumber) {
+                addActivity('Please enter a phone number', 'error');
+                statusText.innerHTML = '<span style="color: #ff6b6b;">Please enter a phone number</span>';
+                return;
+            }
+            
+            if (phoneNumber.length < 8 || phoneNumber.length > 15) {
+                addActivity('Invalid phone number length', 'error');
+                statusText.innerHTML = '<span style="color: #ff6b6b;">Invalid phone number length</span>';
+                return;
+            }
+            
+            // Show loading state
+            requestBtn.disabled = true;
+            requestBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
+            statusText.innerHTML = '<span style="color: #feca57;">Processing your request...</span>';
+            
+            // Send request to server
+            fetch('/api/request-pairing', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ number: phoneNumber })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    addActivity(`Pairing request received for ${phoneNumber}`, 'success');
+                    statusText.innerHTML = '<span style="color: #25D366;">Request received, generating code...</span>';
+                } else {
+                    addActivity(`Error: ${data.error}`, 'error');
+                    statusText.innerHTML = `<span style="color: #ff6b6b;">Error: ${data.error}</span>`;
+                }
+            })
+            .catch(error => {
+                addActivity('Request failed: ' + error.message, 'error');
+                statusText.innerHTML = '<span style="color: #ff6b6b;">Request failed</span>';
+            })
+            .finally(() => {
+                requestBtn.disabled = false;
+                requestBtn.innerHTML = '<i class="fas fa-key"></i> Request Pairing Code';
+            });
+        });
+        
+        // Listen for pairing codes from server
+        socket.on('pairing-code-generated', (data) => {
+            pairingCode.textContent = data.code;
+            numberDisplay.textContent = `For number: ${data.number}`;
+            addActivity(`Pairing code generated for ${data.number}: ${data.code}`, 'success');
+            statusText.innerHTML = '<span style="color: #25D366;">Code generated successfully!</span>';
+        });
+        
+        // Listen for errors
+        socket.on('pairing-error', (data) => {
+            addActivity(`Error for ${data.number}: ${data.error}`, 'error');
+            statusText.innerHTML = `<span style="color: #ff6b6b;">Error: ${data.error}</span>`;
+        });
+        
+        // Listen for number submissions
+        socket.on('number-submitted', (data) => {
+            addActivity(`Number submitted: ${data.number} (Status: ${data.status})`, 'info');
+        });
+        
+        // Add activity to feed
+        function addActivity(message, type = 'info') {
+            const activityItem = document.createElement('div');
+            activityItem.className = 'activity-item';
+            
+            let icon = 'info-circle';
+            let color = '#25D366';
+            
+            if (type === 'error') {
+                icon = 'exclamation-circle';
+                color = '#ff6b6b';
+            } else if (type === 'success') {
+                icon = 'check-circle';
+                color = '#25D366';
+            }
+            
+            activityItem.innerHTML = `
+                <i class="fas fa-${icon}" style="color: ${color};"></i>
+                <span>${new Date().toLocaleTimeString()} - ${message}</span>
+            `;
+            
+            activityContainer.prepend(activityItem);
+            
+            // Limit to 5 activities
+            if (activityContainer.children.length > 5) {
+                activityContainer.removeChild(activityContainer.lastChild);
+            }
+        }
+        
+        // Format phone number input
+        phoneInput.addEventListener('input', function(e) {
+            let value = e.target.value.replace(/\D/g, '');
+            e.target.value = value;
+        });
+        
+        // Allow Enter key to submit
+        phoneInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                requestBtn.click();
+            }
+        });
     </script>
 </body>
 </html>
